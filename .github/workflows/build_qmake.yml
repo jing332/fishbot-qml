@@ -114,29 +114,3 @@ jobs:
         with:
           name: FishbotQML-${{ matrix.host }}-${{ github.run_id }}.${{ matrix.ext }}
           path: ./build/FishbotQML-${{ matrix.host }}.*
-          
-      - name: Create Release
-        id: create_release
-        if: contains(github.ref, 'tags/v')
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-          
-      - name: Upload Release Asset
-        if: contains(github.ref, 'tags/v')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/FishbotQML-${{ matrix.host }}.*
-          asset_name: FishbotQML-${{ matrix.host }}-${{ github.run_id }}.${{ matrix.ext }}
-          asset_content_type: application/x-gtar
-     
-              
-          
-      
