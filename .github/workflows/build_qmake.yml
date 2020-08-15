@@ -1,0 +1,142 @@
+name: Build qmake
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            name: "Windows Latest MinGW"
+            host: windows
+            ext: 7z
+            
+          - os: ubuntu-latest
+            name: "Ubuntu Latest GCC"
+            host: linux
+            ext: tag.xz
+          
+          - os: macos-latest
+            name: "macOS Latest Clang"
+            host: mac
+            ext: tag.xz
+          
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/Qt
+          key: ${{ runner.os }}-QtCache
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '5.15.0'
+          host: ${{ matrix.host }}
+          arch: 'win64_mingw81'
+          dir: '${{ github.workspace }}/Qt'
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+                 
+      - name: Install Go
+        uses: actions/setup-go@v2.1.1
+
+      - name: Set environment
+        run: |
+          echo "::add-path::C:\msys64\mingw64\bin"
+        
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build Go
+        run: |
+          cd ./src/go-mc/cmd/cgoqt/
+          go build -buildmode=c-archive -o fishbot.a
+
+      - name: Build Qt
+        shell: pwsh
+        run: |
+          mkdir build
+          cd build
+          qmake CONFIG+=release ../src/fishbot-qml.pro
+          if ("windows" -eq "${{ matrix.host }}") {
+            mingw32-make -j2
+          }else{
+            make -j2
+          }
+          
+      - name: Pack application
+        shell: pwsh
+        run: |
+          cd build          
+          if ("windows" -eq "${{ matrix.host }}") {
+            mkdir FishbotQML
+            cd FishbotQML
+            copy ../release/fishbot-qml.exe ./
+            windeployqt .\fishbot-qml.exe --qmldir $env:QML2_IMPORT_PATH
+            cd ..\
+            7z a "FishbotQML-windows" ./FishbotQML
+          }
+          elseif("linux" -eq "${{ matrix.host }}") {
+            mkdir FishbotQML
+            cd FishbotQML
+            copy ../fishbot-qml ./
+            wget -c -q "https://github.com/probonopd/linuxdeployqt/releases/download/7/linuxdeployqt-7-x86_64.AppImage"
+            chmod a+x linuxdeployqt-7-x86_64.AppImage
+            ./linuxdeployqt-7-x86_64.AppImage fishbot-qml -qmldir="$env:QML2_IMPORT_PATH"
+            cd ../
+            tar cfJ "FishbotQML-linux.tar.xz" ./FishbotQML
+          }
+          elseif("mac" -eq "${{ matrix.host }}") {
+            macdeployqt ./fishbot-qml.app -qmldir="$env:QML2_IMPORT_PATH"
+            tar cfJ "FishbotQML-mac.tar.xz" ./fishbot-qml.app
+          }
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: FishbotQML-${{ matrix.host }}-${{ github.run_id }}.${{ matrix.ext }}
+          path: ./build/FishbotQML-${{ matrix.host }}.*
+          
+      - name: Create Release
+        id: create_release
+        if: contains(github.ref, 'tags/v')
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          
+      - name: Upload Release Asset
+        if: contains(github.ref, 'tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/FishbotQML-${{ matrix.host }}.*
+          asset_name: FishbotQML-${{ matrix.host }}-${{ github.run_id }}.${{ matrix.ext }}
+          asset_content_type: application/x-gtar
+     
+              
+          
+      

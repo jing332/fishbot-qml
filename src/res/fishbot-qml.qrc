@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>background/avatar_steve.png</file>
+        <file>background/loading.gif</file>
+        <file>background/unknown_server.png</file>
+        <file>icon/add.svg</file>
+        <file>icon/close.svg</file>
+        <file>background/loading.svg</file>
+        <file>icon/selected.svg</file>
+        <file>icon/options.svg</file>
+        <file>icon/instance.svg</file>
+        <file>zh_cn.json</file>
+    </qresource>
+</RCC>

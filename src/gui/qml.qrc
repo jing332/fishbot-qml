@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/layout/LeftSidebar.qml</file>
+        <file>qml/accounts/Accounts.qml</file>
+        <file>qml/servers/ServerItem.qml</file>
+        <file>qml/servers/Servers.qml</file>
+        <file>qml/dialogs/AddServerDialog.qml</file>
+        <file>qml/components/ContentMenu.qml</file>
+        <file>qml/js/app.js</file>
+        <file>qml/js/appState.qml</file>
+        <file>qml/js/util.js</file>
+        <file>qml/components/StyleButton.qml</file>
+        <file>qml/components/StyleTextField.qml</file>
+        <file>qml/accounts/AccountItem.qml</file>
+        <file>qml/components/ImageButton.qml</file>
+        <file>qml/dialogs/AddAccountDialog.qml</file>
+        <file>qml/dialogs/LoadingDialog.qml</file>
+        <file>qml/js/global.js</file>
+        <file>qml/layout/TabItem.qml</file>
+        <file>qml/settings/Settings.qml</file>
+        <file>qml/instances/Instances.qml</file>
+        <file>qml/instances/NewInstance.qml</file>
+    </qresource>
+</RCC>

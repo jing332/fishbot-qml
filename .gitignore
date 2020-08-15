@@ -1,0 +1,5 @@
+/*.user
+/go-mc/cmd/cgoqt/fishbot.h
+*.a
+/src/go-mc/cmd/cgoqt/fishbot.h
+/src/*.user
